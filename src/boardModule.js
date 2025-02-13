@@ -1,6 +1,5 @@
-import { Gameboard, Player, Ship } from "./game.js";
+import { Ship } from "./game.js";
 import { handleAttack } from "./event-handler.js";
-import { playerBoard} from "./dom-elements.js"
 
 export function renderBoard(containerElement, gameboard, isComputer = false) {
     containerElement.innerHTML = ""; 
@@ -50,9 +49,9 @@ export function renderBoard(containerElement, gameboard, isComputer = false) {
 
 const shipModel = {
     carrier: [new Ship("B", 4)],
-    battleship: [new Ship("C", 3), new Ship("C", 3)],
-    destroyer: [new Ship("D", 2), new Ship("D", 2), new Ship("D", 2)],
-    "patrol-boat": [new Ship("P", 1), new Ship("P", 1), new Ship("P", 1), new Ship("P", 1)]
+    battleship: [new Ship("C1", 3), new Ship("C2", 3)],
+    destroyer: [new Ship("D1", 2), new Ship("D2", 2), new Ship("D3", 2)],
+    "patrol-boat": [new Ship("P1", 1), new Ship("P2", 1), new Ship("P3", 1), new Ship("P4", 1)]
 }
 
 export function randomizePlaceShip(gameboard) {

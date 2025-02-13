@@ -1,29 +1,30 @@
+
 export class Ship {
     constructor(name, length) {
         this.name = name;
         this.length = length;
         this.hitCount = 0;
-        this.sunk = false;
     }
 
     hit() {
-        this.hitCount += 1;
-        this.isSunk();
+        if (this.hitCount < this.length) {
+            this.hitCount += 1;
+        }
     }
 
-    isSunk() {
-        this.sunk = this.hitCount >= this.length;
-        return this.sunk;
+    get isSunk() {
+        return this.hitCount >= this.length;
     }
 }
 
 export class Gameboard {
-    constructor(size = 10) {
-        console.log("Gameboard created");
+    constructor(size = 10, name) {
+        console.log(`Gameboard created: ${name}`);
         this.size = size;
         this.board = Array.from({ length: size }, () => Array(size).fill(null)); // Creates 10x10 grid
         this.shipsContainer = [];
         this.missedShots = [];
+        this.name = name;
     }
 
     isValidPlacement(x, y, length, direction) {
@@ -49,34 +50,32 @@ export class Gameboard {
             if (this.board[cellX][cellY] !== null) return false;
         }
     
-        // Check the surrounding cells (adjacent cells) for ships
-        const checkAdjacent = (cellX, cellY) => {
-            const directions = [
-                [-1, 0], [1, 0], // Top and Bottom
-                [0, -1], [0, 1], // Left and Right
-                [-1, -1], [1, 1], // Top-left and Bottom-right diagonals
-                [-1, 1], [1, -1]  // Top-right and Bottom-left diagonals
-            ];
-    
-            for (let [dx, dy] of directions) {
-                const adjX = cellX + dx;
-                const adjY = cellY + dy;
-                // Only check adjacent cells within the bounds of the board
-                if (adjX >= 0 && adjX < this.size && adjY >= 0 && adjY < this.size) {
-                    if (this.board[adjX][adjY] !== null) return false; // If adjacent cell is occupied
-                }
-            }
-            return true;
-        };
-    
         // Check the cells adjacent to the ship's occupied cells
         for (let [cellX, cellY] of occupiedCells) {
-            if (!checkAdjacent(cellX, cellY)) return false;
+            if (!this.checkAdjacent(cellX, cellY)) return false;
         }
     
         return true; 
     }
-    
+
+    checkAdjacent(cellX, cellY) {
+        const directions = [
+            [-1, 0], [1, 0], // Top and Bottom
+            [0, -1], [0, 1], // Left and Right
+            [-1, -1], [1, 1], // Top-left and Bottom-right diagonals
+            [-1, 1], [1, -1]  // Top-right and Bottom-left diagonals
+        ];
+
+        for (let [dx, dy] of directions) {
+            const adjX = cellX + dx;
+            const adjY = cellY + dy;
+            // Only check adjacent cells within the bounds of the board
+            if (adjX >= 0 && adjX < this.size && adjY >= 0 && adjY < this.size) {
+                if (this.board[adjX][adjY] !== null) return false; 
+            }
+        }
+        return true;
+    }
 
     placeShip(x, y, ship, direction) {
         if (!ship || typeof ship.length !== "number") {  // Prevents undefined errors
@@ -88,6 +87,10 @@ export class Gameboard {
             console.error("Placement not valid");
             return false;
         }
+
+        ship.x = x;
+        ship.y = y;
+        ship.direction = direction;
 
         for (let i = 0; i < ship.length; i++) {
             if (direction === "horizontal") {
@@ -103,14 +106,13 @@ export class Gameboard {
     }
 
     receiveAttack(x, y) {
-        console.log("Attacking:", x, y);
-        console.log("Board state:", this.board);
+        console.log(`Attacking (${x}, ${y}), Current value: ${this.board[x][y]}`);
 
         const target = this.board[x][y];
         const HIT_MARKER = "O";
         const MISS_MARKER = "X";
 
-        if (target === "X" || target === "O") {
+        if (target === HIT_MARKER || target === MISS_MARKER) {
             console.log("This position has already been attacked.");
             return null;
         }
@@ -129,14 +131,12 @@ export class Gameboard {
             hitShip.hit();
             this.board[x][y] = HIT_MARKER;
             console.log(`Hit ${hitShip.name}!`);
-
-            if (hitShip.isSunk()){
-                console.log(`${hitShip.name} has been sunk!`);
-                if (this.shipsContainer.every(ship => ship.sunk)) {
-                    console.log("Game Over");
-                }
+            
+            if (hitShip.isSunk) {
+                console.log(`${hitShip.name} has been sunk! Marking adjacent cells.`);
+                console.log(`Ship coordinates: (${hitShip.x}, ${hitShip.y}), Direction: ${hitShip.direction}`);
             }
-
+            
             return true;
         }
     }
