@@ -14,16 +14,19 @@ export function handleAttack(gameboard, x, y, cell) {
 
     if (result === true) {
         cell.classList.add("hit");
+        computer.board.shipsContainer.forEach(ship => {
+            console.log(`${ship.name}: ${ship.hits.size} hits out of ${ship.length}. Sunk: ${ship.isSunk}`);
+        });
     } else {
         cell.classList.add("miss");
     }
 
-    const sunkShip = allShipsSank(computer);
+    const sunkShip = shipSank(computer);
     if (sunkShip) {
-            markAdjacentCells(sunkShip, gameboard === player.board); 
+        markAdjacentCells(sunkShip, gameboard === player.board); 
     }
 
-    if (gameOver(computer)) return;
+    if (gameOver(computer)) return true;
     
     console.log(computer.board.board);
     currentTurn = computer;
@@ -57,59 +60,77 @@ export function computerTurn(gameboard) {
         }
     }
     
-    const sunkShip = allShipsSank(computer)
-    if (allShipsSank(computer)) {
+    const sunkShip = shipSank(player)
+    if (sunkShip) {
             markAdjacentCells(sunkShip, gameboard === computer.board); 
     }
 
-    if (gameOver(player)) return;
+    if (gameOver(player)) return true;
 
     console.log(player.board.board);
     currentTurn = player;
 }
 
-function allShipsSank(whosBoard) {
-    return whosBoard.board.shipsContainer.find(ship => ship.isSunk);
+function shipSank(whosBoard) {
+    const currentSunkShips = whosBoard.board.shipsContainer.filter(ship => ship.isSunk);
+    
+    const newlySunkShip = currentSunkShips.find(ship => {
+        if (!whosBoard.board.processedSunkShips.has(ship.name)) {
+            whosBoard.board.processedSunkShips.add(ship.name);
+            return true;
+        }
+        return false;
+    });
+    
+    return newlySunkShip;
 }
 
 export function markAdjacentCells(ship, isComputer) {
-    const boardSelector = isComputer ? "#player-board" : "#computer-board"; // Select correct board
+    const boardSelector = isComputer ? "#player-board" : "#computer-board";
     const gameboard = isComputer ? player.board : computer.board;
-
-    const directions = [
-        [-1, 0], [1, 0], // Top and Bottom
-        [0, -1], [0, 1], // Left and Right
-        [-1, -1], [1, 1], // Top-left and Bottom-right diagonals
-        [-1, 1], [1, -1]  // Top-right and Bottom-left diagonals
-    ];
-
+    
+    // Get all cells occupied by the ship
+    const shipCells = [];
     for (let i = 0; i < ship.length; i++) {
-        const shipX = ship.x + (ship.direction === "horizontal" ? 0 : i);
-        const shipY = ship.y + (ship.direction === "horizontal" ? i : 0);
+        shipCells.push({
+            x: ship.x + (ship.direction === "vertical" ? i : 0),
+            y: ship.y + (ship.direction === "horizontal" ? i : 0)
+        });
+    }
 
-        for (let [dx, dy] of directions) {
+    // Get and mark all unique adjacent cells
+    const markedPositions = new Set();
+    
+    for (const {x: shipX, y: shipY} of shipCells) {
+        const directions = [
+            [-1, 0], [1, 0], [0, -1], [0, 1],
+            [-1, -1], [1, 1], [-1, 1], [1, -1]
+        ];
+
+        for (const [dx, dy] of directions) {
             const adjX = shipX + dx;
             const adjY = shipY + dy;
+            const posKey = `${adjX},${adjY}`;
 
-            if (adjX >= 0 && adjX < 10 && adjY >= 0 && adjY < 10) {
-                const cell = document.querySelector(`${boardSelector} .cell[data-x="${adjX}"][data-y="${adjY}"]`);
+            if (adjX >= 0 && adjX < 10 && adjY >= 0 && adjY < 10 && 
+                !markedPositions.has(posKey)) {
                 
-                if (
-                    cell && 
-                    !cell.classList.contains("marked") && 
-                    !cell.classList.contains("ship")
-                ) {
-                    cell.classList.add("marked"); 
-
+                markedPositions.add(posKey);
+                const cell = document.querySelector(
+                    `${boardSelector} .cell[data-x="${adjX}"][data-y="${adjY}"]`
+                );
+                
+                if (cell && !cell.classList.contains("hit")) {
+                    cell.classList.add("marked");
                     if (gameboard.board[adjX][adjY] === null) {
-                        gameboard.board[adjX][adjY] = "X"; 
+                        gameboard.board[adjX][adjY] = "X";
                     }
-                    
-                    console.log(`Marking adjacent cells for ${ship.name} on: ${boardSelector}`);
-                } 
+                }
             }
         }
     }
+    
+    console.log(`Marked adjacent cells for ${ship.name} on ${boardSelector}`);
 }
 
 
@@ -119,38 +140,31 @@ export function gameOver(who) {
         winText.innerHTML = `${who === player ? "Computer Wins!" : "Player Wins!"}`;
         gameOverMessage.classList.remove("hidden");
         isGameOver = true;
-        return;
-    }
+        return true;
+    } 
+    return false;
 }
 
 function resetGame() {
     isGameOver = false;
     gameOverMessage.classList.add("hidden");
+    winText.innerHTML = "";
 
-    // Reset hit count and sunk status for all ships
-    player.board.shipsContainer.forEach(ship => {
-        ship.hitCount = 0;
-        ship.sunk = false;
+    // Reset both gameboards
+    player.board.reset();
+    computer.board.reset();
+
+    // Clear all visual markers
+    document.querySelectorAll(".cell").forEach(cell => {
+        cell.classList.remove("marked", "hit", "miss", "ship");
     });
 
-    computer.board.shipsContainer.forEach(ship => {
-        ship.hitCount = 0;
-        ship.sunk = false;
-    });
-
-    // Reset board state (clear hit/miss markers)
-    player.board.board = Array.from({ length: 10 }, () => Array(10).fill(null));
-    computer.board.board = Array.from({ length: 10 }, () => Array(10).fill(null));
-    document.querySelectorAll(".cell.marked").forEach(cell => cell.classList.remove("marked"));
-
-
-    // Re-render boards without placing new ships
+    // Re-render boards with new ship placements
     setupAndRenderBoard(playerBoard, player.board);
     setupAndRenderBoard(computerBoard, computer.board, true);
 
-    currentTurn = player; // Ensure player starts first
+    currentTurn = player;
 }
-
 
 randomizeBtn.addEventListener("click", resetGame);
 

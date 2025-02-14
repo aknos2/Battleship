@@ -3,17 +3,45 @@ export class Ship {
     constructor(name, length) {
         this.name = name;
         this.length = length;
-        this.hitCount = 0;
+        this._hits = new Set(); // Track specific hit positions
+        this._positions = new Set();
     }
-
-    hit() {
-        if (this.hitCount < this.length) {
-            this.hitCount += 1;
+    
+    setPositions(x, y, direction) {
+        this._positions.clear();
+        for (let i = 0; i < this.length; i++) {
+            if (direction === "horizontal") {
+                this._positions.add(`${x},${y + i}`);
+            } else {
+                this._positions.add(`${x + i},${y}`);
+            }
         }
     }
 
+    hit(x, y) {
+        const posKey = `${x},${y}`;
+        if (this._positions.has(posKey)) {
+            this._hits.add(posKey);
+            return true;
+        }
+        return false;
+    }
+
+    get hits() {
+        return this._hits;
+    }
+
+    get hitCount() {
+        return this._hits.size;
+    }
+
     get isSunk() {
-        return this.hitCount >= this.length;
+        return this._hits.size >= this.length;
+    }
+
+    reset() {
+        this._hits.clear();
+        this._positions.clear();
     }
 }
 
@@ -25,6 +53,7 @@ export class Gameboard {
         this.shipsContainer = [];
         this.missedShots = [];
         this.name = name;
+        this.processedSunkShips = new Set(); 
     }
 
     isValidPlacement(x, y, length, direction) {
@@ -91,6 +120,7 @@ export class Gameboard {
         ship.x = x;
         ship.y = y;
         ship.direction = direction;
+        ship.setPositions(x, y, direction);
 
         for (let i = 0; i < ship.length; i++) {
             if (direction === "horizontal") {
@@ -128,18 +158,44 @@ export class Gameboard {
         const hitShip = this.shipsContainer.find((ship) => ship.name === target);
 
         if (hitShip) {
-            hitShip.hit();
+            hitShip.hit(x, y);
             this.board[x][y] = HIT_MARKER;
-            console.log(`Hit ${hitShip.name}!`);
+            console.log(`Hit ${hitShip.name}! Hits: ${hitShip.hitCount}/${hitShip.length}`);
             
             if (hitShip.isSunk) {
                 console.log(`${hitShip.name} has been sunk! Marking adjacent cells.`);
                 console.log(`Ship coordinates: (${hitShip.x}, ${hitShip.y}), Direction: ${hitShip.direction}`);
+                console.log(`Hit positions: ${Array.from(hitShip._hits).join(', ')}`);
             }
             
             return true;
         }
     }
+
+    countShipHits(ship) {
+        let hits = 0;
+        const HIT_MARKER = "O";
+        
+        for (let i = 0; i < ship.length; i++) {
+            const x = ship.x + (ship.direction === "vertical" ? i : 0);
+            const y = ship.y + (ship.direction === "horizontal" ? i : 0);
+            
+            if (this.board[x][y] === HIT_MARKER) {
+                hits++;
+            }
+        }
+        
+        return hits;
+    }
+
+    reset() {
+        this.board = Array.from({ length: this.size }, () => Array(this.size).fill(null));
+        this.missedShots = [];
+        this.processedSunkShips.clear();
+        this.shipsContainer.forEach(ship => ship.reset());
+    }
+
+
 }
 
 export class Player {
