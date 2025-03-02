@@ -1,4 +1,4 @@
-import { computerBoard, gameOverMessage, playerBoard, randomizeBtn, restartBtn, winText } from "./dom-elements.js";
+import { computerBoard, gameOverMessage, playerBoard, randomizeBtn, restartBtn, winText, container } from "./dom-elements.js";
 import { setupAndRenderBoard} from "./boardModule.js";
 import { player, computer} from "./gameState.js";
 
@@ -14,21 +14,31 @@ export function handleAttack(gameboard, x, y, cell) {
 
     if (result === true) {
         cell.classList.add("hit");
+        
+        // Check if a ship was sunk
+        const sunkShip = shipSank(computer);
+        if (sunkShip) {
+            console.log(`Ship ${sunkShip.name} has been sunk!`);
+            markAdjacentCells(sunkShip, false);
+        }
+        
+        // Check if the game is over
+        if (gameOver(computer)) return true;
+        
+        // Player hit a ship - they get another turn (do not change currentTurn)
+        return;
+        
     } else {
         cell.classList.add("miss");
+        
+        // Player missed - end their turn
+        currentTurn = computer;
+        highlightPageSide();
+        highlightBoard();
+        setTimeout(() => computerTurn(player.board), 1500);
     }
-
-    const sunkShip = shipSank(computer);
-    if (sunkShip) {
-        markAdjacentCells(sunkShip, false); 
-    }
-
-    if (gameOver(computer)) return true;
     
     console.log(computer.board.board);
-
-    currentTurn = computer;
-    setTimeout(() => computerTurn(player.board), 1000);
 }
 
 
@@ -103,17 +113,17 @@ export function computerTurn(gameboard) {
             if (sunkShip) {
                 console.log(`Ship ${sunkShip.name} has been sunk!`);
                 markAdjacentCells(sunkShip, true);
-                // After sinking a ship, give turn back to player
-                currentTurn = player;
+                setTimeout(() => computerTurn(gameboard), 1200);
             } else {
                 console.log("Ship was hit but not sunk. Computer attacks again.");
-                // If it's a hit but didn't sink the ship, computer gets another turn
-                setTimeout(() => computerTurn(gameboard), 1000);
+                setTimeout(() => computerTurn(gameboard), 1200);
             }
         } else {
             console.log("Miss. Player's turn.");
             cell.classList.add("miss");
             currentTurn = player;
+            highlightPageSide();
+            highlightBoard();
         }
     }
 }
@@ -236,12 +246,43 @@ function resetGame() {
     // Re-render boards with new ship placements
     setupAndRenderBoard(playerBoard, player.board);
     setupAndRenderBoard(computerBoard, computer.board, true);
+    document.body.classList.remove("highlight-upper-side", "highlight-bottom-side");
 
     currentTurn = player;
 }
 
-randomizeBtn.addEventListener("click", resetGame);
+function highlightBoard() {
+    // Remove the highlight class from both boards first
+    playerBoard.classList.remove("highlight-board");
+    computerBoard.classList.remove("highlight-board");
+
+    if (currentTurn === computer) {
+        playerBoard.classList.add("highlight-board");  // ✅ Apply to correct DOM element
+    } else {
+        computerBoard.classList.add("highlight-board"); // ✅ Apply to correct DOM element
+    }
+}
+
+function highlightPageSide() {
+    document.body.classList.remove("highlight-upper-side", "highlight-bottom-side");
+
+    if (currentTurn === computer) {
+        document.body.classList.add("highlight-upper-side");
+    } else {
+        document.body.classList.add("highlight-bottom-side");
+    }
+}
 
 
-restartBtn.addEventListener("click", resetGame);
+
+randomizeBtn.addEventListener("click", () => {
+    randomizeBtn.textContent = "";
+    randomizeBtn.textContent = "Randomize"
+    resetGame();
+});
+restartBtn.addEventListener("click", () => {
+    randomizeBtn.textContent = "";
+    randomizeBtn.textContent = "Randomize"
+    resetGame();
+});
 

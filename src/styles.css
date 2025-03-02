@@ -13,6 +13,7 @@ body {
     align-items: center;
     height: 100vh;
     font-size: 1.3rem;
+    transition: background 0.8s ease-in-out;
 }
 
 button {
@@ -31,7 +32,17 @@ button {
 
 #buttons-container {
     display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
     justify-content: center;
+    gap: 200px;
+    text-align: center;
+}
+
+#buttons-container > button {
+    width: fit-content;
+    margin: 0 auto;
+    padding: 5px;
 }
 
 .empty {
@@ -104,11 +115,8 @@ button {
 }
 
 .hidden-ship {
-    background-color: #444;
-}
-
-.hidden-ship {
-    background-color: transparent; /* Hide ships for the computer */
+    background-color: lightblue; /* Hide ships for the computer */
+    border: 0.5px solid rgb(5, 5, 127, 0.4);
 }
 
 .marked {
@@ -118,13 +126,11 @@ button {
 
 .hit {
     background-color: red !important;
-    color: white;
     pointer-events: none;
 }
 
 .miss {
     background-color: gray;
-    color: white;
 }
 
 #game-over-message-container {
@@ -174,3 +180,14 @@ button {
     z-index: 1000; /* Ensures it's on top */
 }
 
+.highlight-board {
+    box-shadow: 11px 11px 19px 1px rgb(62, 137, 223);
+}
+
+.highlight-upper-side {
+    background: linear-gradient(to bottom, rgb(173, 216, 230, 0.6) 50%, white 50%);
+}
+
+.highlight-bottom-side {
+    background: linear-gradient(to top,rgb(173, 216, 230, 0.6) 50%, white 50%);
+}

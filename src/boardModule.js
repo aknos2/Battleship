@@ -1,5 +1,6 @@
 import { Ship } from "./game.js";
 import { handleAttack } from "./event-handler.js";
+import { randomizeBtn } from "./dom-elements.js";
 
 export function renderBoard(containerElement, gameboard, isComputer = false) {
     containerElement.innerHTML = ""; 
@@ -37,7 +38,10 @@ export function renderBoard(containerElement, gameboard, isComputer = false) {
                 }
                
                 if (isComputer) { // Only allow attacks on the computer board
-                    cell.addEventListener("click", () => handleAttack(gameboard, x, y, cell));
+                    cell.addEventListener("click", () => {
+                        randomizeBtn.textContent = "Restart game"
+                        handleAttack(gameboard, x, y, cell)
+                    });
                 }
             }
 
