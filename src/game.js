@@ -8,6 +8,10 @@ export class Ship {
     }
     
     setPositions(x, y, direction) {
+        this.x = x;
+        this.y = y;
+        this.direction = direction;
+        
         this._positions.clear();
         for (let i = 0; i < this.length; i++) {
             if (direction === "horizontal") {
@@ -16,14 +20,21 @@ export class Ship {
                 this._positions.add(`${x + i},${y}`);
             }
         }
+        
+        console.log(`Ship ${this.name} positions set: x=${this.x}, y=${this.y}, direction=${this.direction}`);
+        console.log(`Positions: ${Array.from(this._positions)}`);
     }
 
     hit(x, y) {
         const posKey = `${x},${y}`;
+        console.log(`Attempting to hit ${this.name} at position ${posKey}`);
+        console.log(`Ship positions: ${Array.from(this._positions)}`);
         if (this._positions.has(posKey)) {
             this._hits.add(posKey);
+            console.log(`Hit registered! Current hits: ${Array.from(this._hits)}`);
             return true;
         }
+        console.log(`Miss! Position ${posKey} not found in ship positions`);
         return false;
     }
 
@@ -42,11 +53,14 @@ export class Ship {
     reset() {
         this._hits.clear();
         this._positions.clear();
+        this.x = undefined;
+        this.y = undefined;
+        this.direction = undefined;
     }
 }
 
 export class Gameboard {
-    constructor(size = 10, name) {
+    constructor(size = 10, name = "unnamed") {
         console.log(`Gameboard created: ${name}`);
         this.size = size;
         this.board = Array.from({ length: size }, () => Array(size).fill(null)); // Creates 10x10 grid
@@ -107,6 +121,8 @@ export class Gameboard {
     }
 
     placeShip(x, y, ship, direction) {
+        console.log(`Placing ${ship.name} on ${this.name} board`);
+        console.log(`Ship positions before:`, ship.positions);
         if (!ship || typeof ship.length !== "number") {  // Prevents undefined errors
             console.error("Invalid ship object", ship ? ship.length : "undefined");
             return false;
@@ -120,6 +136,7 @@ export class Gameboard {
         ship.x = x;
         ship.y = y;
         ship.direction = direction;
+
         ship.setPositions(x, y, direction);
 
         for (let i = 0; i < ship.length; i++) {
@@ -131,13 +148,12 @@ export class Gameboard {
         }
 
         this.shipsContainer.push(ship);
-
         return true;
     }
 
     receiveAttack(x, y) {
         console.log(`Attacking (${x}, ${y}), Current value: ${this.board[x][y]}`);
-
+        
         const target = this.board[x][y];
         const HIT_MARKER = "O";
         const MISS_MARKER = "X";
@@ -158,14 +174,16 @@ export class Gameboard {
         const hitShip = this.shipsContainer.find((ship) => ship.name === target);
 
         if (hitShip) {
-            hitShip.hit(x, y);
+            console.log(`Hit detected on ship: ${hitShip.name}`);
+            const hitRegistered = hitShip.hit(x, y);
+            console.log(`Hit registered: ${hitRegistered}`);
             this.board[x][y] = HIT_MARKER;
-            console.log(`Hit ${hitShip.name}! Hits: ${hitShip.hitCount}/${hitShip.length}`);
+            console.log(`Updated hit count for ${hitShip.name}: ${hitShip.hitCount}`);
             
             if (hitShip.isSunk) {
-                console.log(`${hitShip.name} has been sunk! Marking adjacent cells.`);
-                console.log(`Ship coordinates: (${hitShip.x}, ${hitShip.y}), Direction: ${hitShip.direction}`);
-                console.log(`Hit positions: ${Array.from(hitShip._hits).join(', ')}`);
+                console.log(`${hitShip.name} has been sunk!`);
+                console.log(`Final positions: ${Array.from(hitShip._positions)}`);
+                console.log(`Final hits: ${Array.from(hitShip._hits)}`);
             }
             
             return true;
@@ -199,9 +217,9 @@ export class Gameboard {
 }
 
 export class Player {
-    constructor(name, isComputer = false) {
+    constructor(name, isComputer = false, board = null) {
         this.name = name;
         this.isComputer = isComputer;
-        this.board = new Gameboard();
+        this.board = board || new Gameboard();
     }
 }

@@ -1,8 +1,9 @@
 import { Gameboard, Player } from "./game.js";
 
-export const player = new Player("Player");
-export const computer = new Player("Computer", true);
+// Create the board outside the Player object
+const playerBoard = new Gameboard(10, "Player");
+const computerBoard = new Gameboard(10, "Computer");
 
-player.board = new Gameboard(10, "Player Board");
-computer.board = new Gameboard(10, "Computer Board");
-
+// Then, create Player objects and pass the pre-existing boards
+export const player = new Player("Player", false, playerBoard);
+export const computer = new Player("Computer", true, computerBoard);

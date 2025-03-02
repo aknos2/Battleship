@@ -4,5 +4,5 @@ import { player, computer } from "./gameState.js";
 import "./styles.css";
 
 
-setupAndRenderBoard(playerBoard, player.board);
+setupAndRenderBoard(playerBoard, player.board, false);
 setupAndRenderBoard(computerBoard, computer.board, true);

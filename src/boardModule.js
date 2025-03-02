@@ -47,18 +47,22 @@ export function renderBoard(containerElement, gameboard, isComputer = false) {
     containerElement.appendChild(boardGrid);
 }
 
-const shipModel = {
-    carrier: [new Ship("B", 4)],
-    battleship: [new Ship("C1", 3), new Ship("C2", 3)],
-    destroyer: [new Ship("D1", 2), new Ship("D2", 2), new Ship("D3", 2)],
-    "patrol-boat": [new Ship("P1", 1), new Ship("P2", 1), new Ship("P3", 1), new Ship("P4", 1)]
+export function getShipModel(boardName) {
+    return {
+        carrier: [new Ship(`${boardName}-B`, 4)],
+        battleship: [new Ship(`${boardName}-C1`, 3), new Ship(`${boardName}-C2`, 3)],
+        destroyer: [new Ship(`${boardName}-D1`, 2), new Ship(`${boardName}-D2`, 2), new Ship(`${boardName}-D3`, 2)],
+        "patrol-boat": [new Ship(`${boardName}-P1`, 1), new Ship(`${boardName}-P2`, 1), new Ship(`${boardName}-P3`, 1), new Ship(`${boardName}-P4`, 1)]
+    };
 }
 
 export function randomizePlaceShip(gameboard) {
-    for (const shipType in shipModel) {
-        const ships = shipModel[shipType];
+    const ships = getShipModel(gameboard.name);
+    
+    for (const shipType in ships) {
+        const shipList = ships[shipType];
 
-        ships.forEach((ship) => {
+        shipList.forEach((ship) => {
             let placed = false;
 
             while (!placed) {
@@ -71,7 +75,7 @@ export function randomizePlaceShip(gameboard) {
                     placed = true;
                 } 
             }
-        })
+        });
     }
 }
 
