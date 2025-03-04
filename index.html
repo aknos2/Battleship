@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Battleship Odin Project</title>
+  <script defer src="main.js"></script></head>
+
+  <body>
+    <div id="container">
+      <div id="player-board" class="board"></div>
+      <div id="computer-board" class="board hover"></div>
+      <div id="buttons-container">
+        <div id="player-message-container">
+          <h1>Player's board</h1>
+          <p>*You can click and drag to position your ships.</p>
+          <p>Right-click to rotate the ship.</p>
+        </div>
+        <button id="random-btn">Randomize</button>
+        <div id="computer-message-container">
+          <h1>Computer's board</h1>
+        </div>
+      </div>
+      <div id="game-over-message-container" class="hidden pop-up-background">
+        <h1 id="game-over-message">Game Over</h1>
+        <h3 id="who-wins-text"></h3>
+        <button id="restart-btn">Restart</button>
+      </div>
+    </div>
+  </body>
+</html>
