@@ -26,7 +26,7 @@ module.exports = {
         exclude: [path.resolve(__dirname, "node_modules")], // ✅ Correct absolute path
         use: {
           loader: "babel-loader",
-      },
+        },
       },
       {
         test: /\.css$/i,
