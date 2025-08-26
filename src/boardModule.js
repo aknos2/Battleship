@@ -77,26 +77,33 @@ export function getShipModel(boardName) {
 export function randomizePlaceShip(gameboard) {
   // Clear existing ships from the gameboard
   gameboard.shipsContainer = [];
-
+  
   const ships = getShipModel(gameboard.name);
-
+  
   for (const shipType in ships) {
-    const shipList = ships[shipType];
+      const shipList = ships[shipType];
 
-    shipList.forEach((ship) => {
-      let placed = false;
+      shipList.forEach((ship) => {
+          placeShipRandomly(gameboard, ship);
+      });
+  }
+  
+  console.log(`${gameboard.name} board now has ${gameboard.shipsContainer.length} ships`);
+}
 
-      while (!placed) {
-        const x = Math.floor(Math.random() * gameboard.size);
-        const y = Math.floor(Math.random() * gameboard.size);
-        const direction = Math.random() > 0.5 ? "horizontal" : "vertical";
+function placeShipRandomly(gameboard, ship) {
+  let placed = false;
 
-        if (gameboard.isValidPlacement(x, y, ship.length, direction)) {
+  while (!placed) {
+      const x = Math.floor(Math.random() * gameboard.size);
+      const y = Math.floor(Math.random() * gameboard.size);
+      const direction = Math.random() > 0.5 ? "horizontal" : "vertical";
+
+      if (gameboard.isValidPlacement(x, y, ship.length, direction)) {
           gameboard.placeShip(x, y, ship, direction);
           placed = true;
-        }
-      }
-    });
+          console.log(`Successfully placed ${ship.name} at (${x},${y}) ${direction}`);
+      } 
   }
 }
 
